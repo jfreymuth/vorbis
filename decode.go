@@ -187,6 +187,10 @@ func (d *Decoder) applyFloor(floors []floorData, residueVectors [][]float32) {
 	for ch := range residueVectors {
 		if floors[ch].data != nil {
 			floors[ch].floor.Apply(residueVectors[ch], floors[ch].data)
+		} else {
+			for i := range residueVectors[ch] {
+				residueVectors[ch][i] = 0
+			}
 		}
 	}
 }
