@@ -33,58 +33,8 @@ func (r *bitReader) Read1() uint32 {
 	return result
 }
 
-func (r *bitReader) Read8(n uint) uint8 {
-	if n > 8 {
-		panic("invalid argument")
-	}
-	var result uint8
-	var written uint
-	size := n
-	for n > 0 {
-		if r.position >= len(r.data) {
-			r.eof = true
-			return 0
-		}
-		result |= uint8(r.data[r.position]>>r.bitOffset) << written
-		written += 8 - r.bitOffset
-		if n < 8-r.bitOffset {
-			r.bitOffset += n
-			break
-		}
-		n -= 8 - r.bitOffset
-		r.bitOffset = 0
-		r.position++
-	}
-	return result &^ (0xFF << size)
-}
-
-func (r *bitReader) Read16(n uint) uint16 {
-	if n > 16 {
-		panic("invalid argument")
-	}
-	var result uint16
-	var written uint
-	size := n
-	for n > 0 {
-		if r.position >= len(r.data) {
-			r.eof = true
-			return 0
-		}
-		result |= uint16(r.data[r.position]>>r.bitOffset) << written
-		written += 8 - r.bitOffset
-		if n < 8-r.bitOffset {
-			r.bitOffset += n
-			break
-		}
-		n -= 8 - r.bitOffset
-		r.bitOffset = 0
-		r.position++
-	}
-	return result &^ (0xFFFF << size)
-}
-
-func (r *bitReader) Read32(n uint) uint32 {
-	if n > 32 {
+func (r *bitReader) read(n uint, bits uint) uint32 {
+	if n > bits {
 		panic("invalid argument")
 	}
 	var result uint32
@@ -105,32 +55,28 @@ func (r *bitReader) Read32(n uint) uint32 {
 		r.bitOffset = 0
 		r.position++
 	}
-	return result &^ (0xFFFFFFFF << size)
+	switch bits {
+	case 8:
+		return result &^ (0xFF << size)
+	case 16:
+		return result &^ (0xFFFF << size)
+	case 32:
+		return result &^ (0xFFFFFFFF << size)
+	default:
+		panic("invalid bits")
+	}
 }
 
-func (r *bitReader) Read64(n uint) uint64 {
-	if n > 64 {
-		panic("invalid argument")
-	}
-	var result uint64
-	var written uint
-	size := n
-	for n > 0 {
-		if r.position >= len(r.data) {
-			r.eof = true
-			return 0
-		}
-		result |= uint64(r.data[r.position]>>r.bitOffset) << written
-		written += 8 - r.bitOffset
-		if n < 8-r.bitOffset {
-			r.bitOffset += n
-			break
-		}
-		n -= 8 - r.bitOffset
-		r.bitOffset = 0
-		r.position++
-	}
-	return result &^ (0xFFFFFFFFFFFFFFFF << size)
+func (r *bitReader) Read8(n uint) uint8 {
+	return uint8(r.read(n, 8))
+}
+
+func (r *bitReader) Read16(n uint) uint16 {
+	return uint16(r.read(n, 16))
+}
+
+func (r *bitReader) Read32(n uint) uint32 {
+	return uint32(r.read(n, 32))
 }
 
 func (r *bitReader) ReadBool() bool {
