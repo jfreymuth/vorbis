@@ -55,16 +55,7 @@ func (r *bitReader) read(n uint, bits uint) uint32 {
 		r.bitOffset = 0
 		r.position++
 	}
-	switch bits {
-	case 8:
-		return result &^ (0xFF << size)
-	case 16:
-		return result &^ (0xFFFF << size)
-	case 32:
-		return result &^ (0xFFFFFFFF << size)
-	default:
-		panic("invalid bits")
-	}
+	return result &^ (0xFFFFFFFF << size)
 }
 
 func (r *bitReader) Read8(n uint) uint8 {
