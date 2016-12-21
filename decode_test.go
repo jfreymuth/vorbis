@@ -13,15 +13,23 @@ type GobVorbis struct {
 	Packets [][]byte
 }
 
-func TestDecode(t *testing.T) {
+func readTestFile() (*GobVorbis, error) {
 	file, err := os.Open("testdata/test.gob")
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	defer file.Close()
 
-	var data GobVorbis
-	err = gob.NewDecoder(file).Decode(&data)
+	data := new(GobVorbis)
+	err = gob.NewDecoder(file).Decode(data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func TestDecode(t *testing.T) {
+	data, err := readTestFile()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,15 +89,9 @@ func equal(a, b, tolerance float32) bool {
 	return (a > b && a-b < tolerance) || b-a < tolerance
 }
 
-func BenchmarkDecode(b *testing.B) {
-	file, err := os.Open("testdata/test.gob")
+func BenchmarkSetup(b *testing.B) {
+	data, err := readTestFile()
 	if err != nil {
-		b.Fatal(err)
-	}
-	defer file.Close()
-
-	var data GobVorbis
-	if err = gob.NewDecoder(file).Decode(&data); err != nil {
 		b.Fatal(err)
 	}
 
@@ -101,6 +103,24 @@ func BenchmarkDecode(b *testing.B) {
 				b.Fatal(err)
 			}
 		}
+	}
+}
+
+func BenchmarkDecode(b *testing.B) {
+	data, err := readTestFile()
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	var dec Decoder
+	for _, header := range data.Headers {
+		if err = dec.ReadHeader(header); err != nil {
+			b.Fatal(err)
+		}
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
 		for _, packet := range data.Packets {
 			if _, err := dec.Decode(packet); err != nil {
 				b.Fatal(err)
