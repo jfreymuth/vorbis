@@ -80,3 +80,31 @@ decode:
 func equal(a, b, tolerance float32) bool {
 	return (a > b && a-b < tolerance) || b-a < tolerance
 }
+
+func BenchmarkDecode(b *testing.B) {
+	file, err := os.Open("testdata/test.gob")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer file.Close()
+
+	var data GobVorbis
+	if err = gob.NewDecoder(file).Decode(&data); err != nil {
+		b.Fatal(err)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var dec Decoder
+		for _, header := range data.Headers {
+			if err = dec.ReadHeader(header); err != nil {
+				b.Fatal(err)
+			}
+		}
+		for _, packet := range data.Packets {
+			if _, err := dec.Decode(packet); err != nil {
+				b.Fatal(err)
+			}
+		}
+	}
+}
