@@ -94,7 +94,7 @@ func (d *Decoder) ReadHeader(header []byte) error {
 		d.overlap = make([]float32, d.blocksize[1]*d.channels)
 		d.setupRead = true
 	default:
-		return errors.New("vorbis: unkown header type")
+		return errors.New("vorbis: unknown header type")
 	}
 	return nil
 }
