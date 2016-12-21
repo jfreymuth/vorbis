@@ -9,7 +9,7 @@ const codebookPattern = 0x564342 //"BCV"
 
 type codebook struct {
 	dimensions uint32
-	entries    huffmanTable
+	entries    *huffmanTable
 	values     []float32
 }
 
@@ -19,7 +19,7 @@ func (c *codebook) ReadFrom(r *bitReader) error {
 	}
 	c.dimensions = r.Read32(16)
 	numEntries := r.Read32(24)
-	c.entries = make(huffmanTable, numEntries*2-2)
+	c.entries = newHuffmanTable(numEntries*2-2)
 	ordered := r.ReadBool()
 	if !ordered {
 		sparse := r.ReadBool()
