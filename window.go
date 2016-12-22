@@ -6,7 +6,7 @@ type windowType struct {
 	size, prev, next int
 }
 
-func (d *Decoder) applyWindow(t *windowType, data [][]float32) {
+func (d *Decoder) applyWindow(t *windowType, samples [][]float32) {
 	center := t.size / 2
 	prevOffset := t.size/4 - t.prev/4
 	nextOffset := t.size/4 - t.next/4
@@ -17,18 +17,25 @@ func (d *Decoder) applyWindow(t *windowType, data [][]float32) {
 	if t.next == d.blocksize[1] {
 		nextType = 1
 	}
-	for ch := range data {
-		for i := 0; i < prevOffset; i++ {
-			data[ch][i] = 0
+	for ch := range samples {
+		s := samples[ch][:prevOffset]
+		for i := range s {
+			s[i] = 0
 		}
-		for i := 0; i < t.prev/2; i++ {
-			data[ch][prevOffset+i] *= d.windows[prevType][i]
+		s = samples[ch][prevOffset : prevOffset+t.prev/2]
+		w := d.windows[prevType][:len(s)]
+		for i := range s {
+			s[i] *= w[i]
 		}
-		for i := 0; i < t.next/2; i++ {
-			data[ch][center+nextOffset+i] *= d.windows[nextType][t.next/2+i]
+		s = samples[ch][center+nextOffset : center+nextOffset+t.next/2]
+		w = d.windows[nextType][t.next/2:]
+		w = w[:len(s)]
+		for i := range s {
+			s[i] *= w[i]
 		}
-		for i := t.size - nextOffset; i < t.size; i++ {
-			data[ch][i] = 0
+		s = samples[ch][t.size-nextOffset:]
+		for i := range s {
+			s[i] = 0
 		}
 	}
 }
