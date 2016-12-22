@@ -26,7 +26,7 @@ func generateIMDCTLookup(n int, l *imdctLookup) {
 }
 
 // "inverse modified discrete cosine transform"
-func imdct(t imdctLookup, in, out []float32) {
+func imdct(t *imdctLookup, in, out []float32) {
 	n := len(in) * 2
 
 	n2, n4, n8 := n/2, n/4, n/8
@@ -34,29 +34,45 @@ func imdct(t imdctLookup, in, out []float32) {
 
 	// more of these steps could be done in place, but we need two arrays anyway
 	for j := 0; j < n8; j++ {
-		v0 := (-in[4*j+3])*t.A[n2-2*j-1] + (-in[4*j+1])*t.A[n2-2*j-2]
-		v1 := (-in[4*j+3])*t.A[n2-2*j-2] - (-in[4*j+1])*t.A[n2-2*j-1]
-		v2 := (in[n2-4*j-4])*t.A[n4-2*j-1] + (in[n2-4*j-2])*t.A[n4-2*j-2]
-		v3 := (in[n2-4*j-4])*t.A[n4-2*j-2] - (in[n2-4*j-2])*t.A[n4-2*j-1]
+		a0 := t.A[n2-2*j-1]
+		a1 := t.A[n2-2*j-2]
+		a2 := t.A[n4-2*j-1]
+		a3 := t.A[n4-2*j-2]
+		a4 := t.A[n2-4-4*j]
+		a5 := t.A[n2-3-4*j]
+		v0 := (-in[4*j+3])*a0 + (-in[4*j+1])*a1
+		v1 := (-in[4*j+3])*a1 - (-in[4*j+1])*a0
+		v2 := (in[n2-4*j-4])*a2 + (in[n2-4*j-2])*a3
+		v3 := (in[n2-4*j-4])*a3 - (in[n2-4*j-2])*a2
 		out[n4+2*j+1] = v3 + v1
 		out[n4+2*j] = v2 + v0
-		out[2*j+1] = (v3-v1)*t.A[n2-4-4*j] - (v2-v0)*t.A[n2-3-4*j]
-		out[2*j] = (v2-v0)*t.A[n2-4-4*j] + (v3-v1)*t.A[n2-3-4*j]
+		out[2*j+1] = (v3-v1)*a4 - (v2-v0)*a5
+		out[2*j] = (v2-v0)*a4 + (v3-v1)*a5
 	}
 	ld := int(ilog(n) - 1)
 	for l := 0; l < ld-3; l++ {
-		k0, k1 := n>>uint(l+3), 1<<uint(l+3)
+		k0 := n >> uint(l+3)
+		k1 := 1 << uint(l+3)
 		rlim := n >> uint(l+4)
 		s2lim := 1 << uint(l+2)
-		var r, s2 int
-		for r = 0; r < rlim; r++ {
-			for s2 = 0; s2 < s2lim; s2 += 2 {
-				v0, v1 := out[n2-1-k0*s2-2*r], out[n2-2-k0*s2-2*r]
-				v2, v3 := out[n2-1-k0*(s2+1)-2*r], out[n2-2-k0*(s2+1)-2*r]
-				out[n2-1-k0*s2-2*r] = v0 + v2
-				out[n2-2-k0*s2-2*r] = v1 + v3
-				out[n2-1-k0*(s2+1)-2*r] = (v0-v2)*t.A[r*k1] - (v1-v3)*t.A[r*k1+1]
-				out[n2-2-k0*(s2+1)-2*r] = (v1-v3)*t.A[r*k1] + (v0-v2)*t.A[r*k1+1]
+		for r := 0; r < rlim; r++ {
+			a0 := t.A[r*k1]
+			a1 := t.A[r*k1+1]
+			i0 := n2 - 1 - 2*r
+			i1 := n2 - 2 - 2*r
+			i2 := n2 - 1 - k0 - 2*r
+			i3 := n2 - 2 - k0 - 2*r
+			for s2 := 0; s2 < s2lim; s2 += 2 {
+				v0, v1 := out[i0], out[i1]
+				v2, v3 := out[i2], out[i3]
+				out[i0] = v0 + v2
+				out[i1] = v1 + v3
+				out[i2] = (v0-v2)*a0 - (v1-v3)*a1
+				out[i3] = (v1-v3)*a0 + (v0-v2)*a1
+				i0 -= 2 * k0
+				i1 -= 2 * k0
+				i2 -= 2 * k0
+				i3 -= 2 * k0
 			}
 		}
 	}
@@ -75,27 +91,38 @@ func imdct(t imdctLookup, in, out []float32) {
 		in[n4-1-2*k] = out[4*k+2]
 		in[n4-2-2*k] = out[4*k+3]
 	}
+	i0 := 0
+	i1 := 1
+	i2 := n2 - 2
+	i3 := n2 - 1
 	for k := 0; k < n8; k++ {
-		v0, v1 := in[2*k], in[1+2*k]
-		v2, v3 := in[n2-2-2*k], in[n2-1-2*k]
-		out[2*k] = (v0 + v2 + t.C[2*k+1]*(v0-v2) + t.C[2*k]*(v1+v3)) / 2
-		out[n2-2-2*k] = (v0 + v2 - t.C[2*k+1]*(v0-v2) - t.C[2*k]*(v1+v3)) / 2
-		out[1+2*k] = (v1 - v3 + t.C[2*k+1]*(v1+v3) - t.C[2*k]*(v0-v2)) / 2
-		out[n2-1-2*k] = (-v1 + v3 + t.C[2*k+1]*(v1+v3) - t.C[2*k]*(v0-v2)) / 2
+		v0, v1 := in[i0], in[i1]
+		v2, v3 := in[i2], in[i3]
+		c0 := t.C[i0]
+		c1 := t.C[i1]
+		out[i0] = (v0 + v2 + c1*(v0-v2) + c0*(v1+v3)) / 2
+		out[i2] = (v0 + v2 - c1*(v0-v2) - c0*(v1+v3)) / 2
+		out[i1] = (v1 - v3 + c1*(v1+v3) - c0*(v0-v2)) / 2
+		out[i3] = (-v1 + v3 + c1*(v1+v3) - c0*(v0-v2)) / 2
+		i0 += 2
+		i1 += 2
+		i2 -= 2
+		i3 -= 2
 	}
 	for k := 0; k < n4; k++ {
-		in[k] = out[2*k]*t.B[2*k] + out[2*k+1]*t.B[2*k+1]
-		in[n2-1-k] = out[2*k]*t.B[2*k+1] - out[2*k+1]*t.B[2*k]
+		b0 := t.B[2*k]
+		b1 := t.B[2*k+1]
+		v0 := out[2*k]
+		v1 := out[2*k+1]
+		in[k] = v0*b0 + v1*b1
+		in[n2-1-k] = v0*b1 - v1*b0
 	}
-	i := 0
-	for ; i < n4; i++ {
+	for i := 0; i < n4; i++ {
 		out[i] = in[i+n4]
+		out[n-i-1] = -in[n-i-n3_4-1]
 	}
-	for ; i < n3_4; i++ {
+	for i := n4; i < n3_4; i++ {
 		out[i] = -in[n3_4-i-1]
-	}
-	for ; i < n; i++ {
-		out[i] = -in[i-n3_4]
 	}
 }
 

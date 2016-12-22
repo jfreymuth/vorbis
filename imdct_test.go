@@ -34,7 +34,7 @@ func TestIMDCT(t *testing.T) {
 	var lookup imdctLookup
 	generateIMDCTLookup(blocksize, &lookup)
 	result := make([]float32, blocksize)
-	imdct(lookup, data, result)
+	imdct(&lookup, data, result)
 
 	for i := range result {
 		if !equalRel(result[i], reference[i], 1.002) {
@@ -63,7 +63,7 @@ func BenchmarkIMDCT(b *testing.B) {
 		// the imdct function does not preserve the input,
 		// reset it, otherwise everything ends up being NaN
 		copy(in, data)
-		imdct(lookup, in, out)
+		imdct(&lookup, in, out)
 	}
 }
 

@@ -51,7 +51,7 @@ func (d *Decoder) decodePacket(r *bitReader, out []float32) ([]float32, error) {
 	raw := make([][]float32, d.channels)
 	for ch := range raw {
 		raw[ch] = d.rawBuffer[ch][:blocksize]
-		imdct(d.lookup[blocktype], residueVectors[ch], raw[ch])
+		imdct(&d.lookup[blocktype], residueVectors[ch], raw[ch])
 	}
 
 	// apply window and overlap
