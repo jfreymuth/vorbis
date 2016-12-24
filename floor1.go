@@ -177,12 +177,12 @@ func (f *floor1) Swap(i, j int) {
 func lowNeighbor(v []uint32, index int) int {
 	val := v[index]
 	best := 0
-	max := val
+	max := uint32(0)
 	for i := 1; i < index; i++ {
 		if v[i] >= val {
 			continue
 		}
-		if v[i] > max || max == val {
+		if v[i] > max {
 			best = i
 			max = v[i]
 		}
@@ -192,12 +192,12 @@ func lowNeighbor(v []uint32, index int) int {
 func highNeighbor(v []uint32, index int) int {
 	val := v[index]
 	best := 0
-	min := val
+	min := uint32(0xffffffff)
 	for i := 1; i < index; i++ {
 		if v[i] <= val {
 			continue
 		}
-		if v[i] < min || min == val {
+		if v[i] < min {
 			best = i
 			min = v[i]
 		}
@@ -242,7 +242,7 @@ func renderLine(x0, y0, x1, y1 uint32, v []float32) {
 	if base < 0 {
 		absBase = uint32(-absBase)
 	}
-	ady = ady - absBase*adx
+	ady -= absBase*adx
 
 	v[x] *= inverseDBTable[y]
 	for x := x0 + 1; x < x1; x++ {
