@@ -1,4 +1,4 @@
-# vorbis
+# vorbis [![Build Status](https://travis-ci.org/jfreymuth/vorbis.svg)](https://travis-ci.org/jfreymuth/vorbis)
 
 a native go vorbis decoder
 
