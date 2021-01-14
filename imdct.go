@@ -1,6 +1,9 @@
 package vorbis
 
-import "math"
+import (
+	"math"
+	"math/bits"
+)
 
 type imdctLookup struct {
 	A, B, C []float32
@@ -77,7 +80,7 @@ func imdct(t *imdctLookup, in, out []float32) {
 		}
 	}
 	for i := 0; i < n8; i++ {
-		j := int(bitReverse(uint32(i)) >> uint(32-ld+3))
+		j := int(bits.Reverse32(uint32(i)) >> uint(32-ld+3))
 		if i < j {
 			out[4*j], out[4*i] = out[4*i], out[4*j]
 			out[4*j+1], out[4*i+1] = out[4*i+1], out[4*j+1]
@@ -124,14 +127,6 @@ func imdct(t *imdctLookup, in, out []float32) {
 	for i := n4; i < n3_4; i++ {
 		out[i] = -in[n3_4-i-1]
 	}
-}
-
-func bitReverse(n uint32) uint32 {
-	n = ((n & 0xAAAAAAAA) >> 1) | ((n & 0x55555555) << 1)
-	n = ((n & 0xCCCCCCCC) >> 2) | ((n & 0x33333333) << 2)
-	n = ((n & 0xF0F0F0F0) >> 4) | ((n & 0x0F0F0F0F) << 4)
-	n = ((n & 0xFF00FF00) >> 8) | ((n & 0x00FF00FF) << 8)
-	return (n >> 16) | (n << 16)
 }
 
 // original c code from stb_vorbis
