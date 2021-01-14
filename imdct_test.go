@@ -23,6 +23,7 @@ func imdctSlow(in []float32) []float32 {
 }
 
 func TestIMDCT(t *testing.T) {
+	//rand.Seed(0)
 	const blocksize = 256
 	data := make([]float32, blocksize/2)
 	for i := range data {
@@ -37,7 +38,7 @@ func TestIMDCT(t *testing.T) {
 	imdct(&lookup, data, result)
 
 	for i := range result {
-		if !equalRel(result[i], reference[i], 1.002) {
+		if !equalAbs(result[i], reference[i], 1.002) {
 			t.Errorf("different values at index %d (%g != %g)", i, result[i], reference[i])
 			break
 		}
@@ -69,4 +70,8 @@ func BenchmarkIMDCT(b *testing.B) {
 
 func equalRel(a, b, tolerance float32) bool {
 	return (a > b && a/b < tolerance) || b/a < tolerance
+}
+
+func equalAbs(a, b, tolerance float32) bool {
+	return a-b < tolerance && b-a < tolerance
 }
