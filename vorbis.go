@@ -26,11 +26,8 @@ type Decoder struct {
 	windows       [2][]float32
 	lookup        [2]imdctLookup
 	residueBuffer [][]float32
+	floorBuffer   []floorData
 	rawBuffer     [][]float32
-
-	floorData      []floorData
-	residueVectors [][]float32
-	raw            [][]float32
 }
 
 // The Bitrate of a vorbis stream.
