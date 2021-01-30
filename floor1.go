@@ -242,7 +242,7 @@ func renderLine(x0, y0, x1, y1 uint32, v []float32) {
 	if base < 0 {
 		absBase = uint32(-absBase)
 	}
-	ady -= absBase*adx
+	ady -= absBase * adx
 
 	v[x] *= inverseDBTable[y]
 	for x := x0 + 1; x < x1; x++ {
