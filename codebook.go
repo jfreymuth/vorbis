@@ -108,7 +108,11 @@ func ilog(x int) uint {
 }
 
 func lookup1Values(entries int, dim uint32) int {
-	return int(math.Floor(math.Pow(float64(entries), 1/float64(dim))))
+	r := int(math.Floor(math.Pow(float64(entries), 1/float64(dim))))
+	if math.Pow(float64(r+1), float64(dim)) <= float64(entries) {
+		return r + 1
+	}
+	return r
 }
 
 func float32Unpack(x uint32) float32 {
