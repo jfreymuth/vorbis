@@ -133,10 +133,11 @@ func (d *Decoder) readSetupHeader(header []byte) error {
 }
 
 func (d *Decoder) initLookup() {
-	d.windows[0] = makeWindow(d.blocksize[0])
-	d.windows[1] = makeWindow(d.blocksize[1])
-	generateIMDCTLookup(d.blocksize[0], &d.lookup[0])
-	generateIMDCTLookup(d.blocksize[1], &d.lookup[1])
+	for i, blocksize := range d.blocksize {
+		t := tablesFor(blocksize)
+		d.windows[i] = t.window
+		d.lookup[i] = &t.imdct
+	}
 	d.residueBuffer = make([][]float32, d.channels)
 	for i := range d.residueBuffer {
 		d.residueBuffer[i] = make([]float32, d.blocksize[1]/2)

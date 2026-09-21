@@ -51,7 +51,7 @@ func (d *Decoder) decodePacket(r *bitReader, out []float32) ([]float32, error) {
 	// inverse MDCT
 	for ch := range d.rawBuffer {
 		d.rawBuffer[ch] = d.rawBuffer[ch][:blocksize]
-		imdct(&d.lookup[blocktype], d.residueBuffer[ch], d.rawBuffer[ch])
+		imdct(d.lookup[blocktype], d.residueBuffer[ch], d.rawBuffer[ch])
 	}
 
 	// apply window and overlap

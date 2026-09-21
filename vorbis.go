@@ -23,8 +23,10 @@ type Decoder struct {
 	hasOverlap   bool
 	overlapShort bool
 
+	// windows and lookup point into the process-wide tables for the
+	// stream's two blocksizes, see tablesFor.
 	windows       [2][]float32
-	lookup        [2]imdctLookup
+	lookup        [2]*imdctLookup
 	residueBuffer [][]float32
 	floorBuffer   []floorData
 	rawBuffer     [][]float32
